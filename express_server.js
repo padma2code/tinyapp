@@ -57,13 +57,20 @@ app.get("/", (req, res) => {
 app.get("/urls.json", (req, res) => {
     res.json(urlDatabase);
   });
-  
+
   //app.get("/hello", (req, res) => {
     //res.send("<html><body>Hello <b>World</b></body></html>\n");
   //});
   app.post("/urls/:shortURL/delete", (req,res) => {
     delete urlDatabase[req.params.shortURL];
     res.redirect("/urls");
+  });
+
+  app.post("/urls/:shortURL", (req, res) => {
+    const shortURL = req.params.shortURL;
+    const longURL = req.body.longURL;
+    urlDatabase[shortURL] = longURL;
+    res.redirect(`/urls/${shortURL}`);
   });
   
 app.listen(PORT, () => {
