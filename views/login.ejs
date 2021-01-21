@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
   <head>
@@ -5,12 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <!--Bootstrap Css -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
-    <title>Registration</title>
+    <title>Login</title>
   </head>
   <body>
-    <main style="margin: 10em; background-color: rgb(140, 182, 147);">
-      <h3>Registration</h3>
-      <form action="/register" method="POST">
+    <%- include('partials/_header'); %>
+    <main style="margin: 10em; background-color: rgb(203, 218, 201);">
+      <h3>Login</h3>
+      <form action="/login" method="POST">
         <div class="form-group">
         <label for="email">Email address</label>
         <input type="email" class="form-control" id="inputEmail3" name="email" aria-describedby="emailHelp" placeholder="Enter email">
@@ -21,7 +23,7 @@
   </div>
   <div class="form-check">
   </div>
-  <button type="submit" class="btn btn-primary">Register</button>
+  <button type="submit" class="btn btn-primary" style="margin: 1em">Login</button>
 </form>
 </main>
  <!-- Bootstrap JS -->

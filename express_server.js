@@ -1,65 +1,125 @@
 const express = require('express');
 const app = express();
 const PORT = 8080; //default port
+const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
-app.use(cookieParser());
+const { validateEmailPassword, getUserId } = require('./helper');
+
 app.set('view engine','ejs'); //EJS as templating engine
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookieParser());
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
 };
 
-const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({extended: true}));
+//object to store users information
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+};
 
 //function to generate random string for short url
 const generateRandomString = () => {
   return Math.random().toString(36).slice(2,8);
 };
-//to render home page
+//to render root page
 app.get('/', (req, res) => {
   res.send('Hello!');
 });
 
-//cookie to store username
-app.post('/login',(req,res) => {
-  const username = req.body.username;
-  res.cookie('username',username);
-  res.redirect('/urls');
+//method to return registeration template
+app.get('/register',(req,res) =>{
+  const templateVars = { user: req.cookies['user'],};
+  res.render('urls_registration', templateVars);
 });
 
-//cookie to clear cookie
-app.post('/logout',(req,res) => {
-  res.clearCookie('username');
-  res.redirect('/urls');
+//method to return login template
+app.get('/login',(req,res) =>{
+  const templateVars = { user: req.cookies['user'],};
+  res.render('login', templateVars);
 });
 
 app.get('/urls.json',(req,res) => {
   res.json(urlDatabase);
 });
 
+//POST for registeration
+app.post('/register',(req,res) => {
+  const id = generateRandomString();
+  for(let user in users){
+    if (users[user]['email'] === req.body.email){
+      res.status(400);
+      res.send('The email already exists');
+    } 
+  } 
+  if(req.body.email && req.body.password ){
+    users[id] = {
+      id,
+      email:req.body.email,
+      password:req.body.password
+    };
+  } else {
+    res.status(400);
+    res.send('Enter valid email and password');
+  }
+  const user = users[id];
+  console.log(user);
+  res.cookie('user',user);
+  res.redirect('/urls');  
+});
+
+//POST for login
+app.post('/login',(req,res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  if (validateEmailPassword(email, password, users)) {
+    let user = getUserId(email,users);
+    res.cookie('user',user);
+    res.redirect('/urls'); 
+  }
+  res.status(400);
+  res.send('Invalid email')
+});
+
+//method to clear cookie
+app.post('/logout',(req,res) => {
+  res.clearCookie('user');
+  res.redirect('/urls');
+});
+
 //to get all the short and long urls
 app.get('/urls', (req, res) => {
-  const templateVars = { 
-username: req.cookies["username"], 
- urls: urlDatabase, 
- };
+  const templateVars = {
+    user: req.cookies['user'],
+    urls: urlDatabase,
+  };
   res.render('urls_index', templateVars);
 });
+//Renders form to enter long url
+app.get('/urls/new', (req, res) => {
+  const templateVars = { user: req.cookies['user'] };
+  res.render('urls_new',templateVars);  
+});
+
 
 //to get a single short and long urls
 app.get('/urls/:shortURL', (req, res) => {
   const templateVars = {
-  username: req.cookies["username"], 
-  shortURL: req.params.shortURL, 
-  longURL: urlDatabase[req.params.shortURL],
- };
+    user: req.cookies['user'],
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL],
+  };
   res.render('urls_show',templateVars);
-})
-//Renders form to enter long url
-app.get('/urls/new', (req, res) => {
-  res.render('urls_new');
 });
 
 //to redirect to urls after the creating a new URL
@@ -72,29 +132,23 @@ app.post('/urls', (req, res) => {
 //redirecting to long URLs for the corresponding short URL
 app.get('/u/:shortURL', (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
-  res.redirect(longURL); 
+  res.redirect(longURL);
 });
 
 //to delete a url
 app.post('/urls/:shortURL/delete',(req, res) => {
   delete urlDatabase[req.params.shortURL];
-  res.redirect('/urls')
-})
+  res.redirect('/urls');
+});
 
-//post method for updating 
+//post method for updating
 app.post('/urls/:shortURL/update',(req, res) => {
-  const templateVars = { 
-  shortURL: req.params.shortURL, 
-  longURL : req.body.longURL,
-  username: req.cookies["username"],
+  const templateVars = {
+    shortURL: req.params.shortURL,
+    longURL : req.body.longURL,
+    user: req.cookies['user'],  
   };
   res.render('urls_show', templateVars);
-})
-
-//method to return registeration template
-app.get("/register", (req,res) => {
-  let templateVars = { username: req.cookies["username"] };
-  res.render("urls_registration", templateVars);
 });
 
 app.get('/hello', (req, res) => {
