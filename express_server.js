@@ -3,7 +3,7 @@ const app = express();
 const PORT = 8080; //default port
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
-const { validateEmailPassword, getUserId, urlsForUser } = require('./helper');
+const { generateRandomString,validateEmailPassword, getUserId, urlsForUser } = require('./helper');
 
 app.set('view engine','ejs'); //EJS as templating engine
 app.use(bodyParser.urlencoded({extended: true}));
@@ -28,10 +28,6 @@ const users = {
   }
 };
 
-//function to generate random string for short url
-const generateRandomString = () => {
-  return Math.random().toString(36).slice(2,8);
-};
 //to render root page
 app.get('/', (req, res) => {
   res.send('Hello!');
@@ -106,9 +102,9 @@ app.get('/urls', (req, res) => {
     res.render('urls_index', templateVars);
   } 
   const templateVars = { user:undefined, urls:undefined }
-  res.render('urls_index',templateVars);
-  
+  res.render('urls_index',templateVars);  
 });
+
 //Renders form to enter long url
 app.get('/urls/new', (req, res) => {
   const user = req.cookies['user'];
@@ -117,10 +113,8 @@ app.get('/urls/new', (req, res) => {
     res.render('urls_new',templateVars);
   } else {
     res.redirect('/login');
-  }
-    
+  }   
 });
-
 
 //to get a single short and long urls
 app.get('/urls/:shortURL', (req, res) => {
@@ -170,18 +164,26 @@ app.get('/u/:shortURL', (req, res) => {
 
 //to delete a url
 app.post('/urls/:shortURL/delete',(req, res) => {
-  delete urlDatabase[req.params.shortURL];
-  res.redirect('/urls');
+  const user = req.cookies['user'];
+  const shortURL = req.params.shortURL;
+  if(user['id'] === urlDatabase[shortURL]['userID']){
+    delete urlDatabase[req.params.shortURL];
+    res.redirect('/urls');
+  } else {
+    res.status(400).send('Login first');
+  }
 });
 
 //post method for updating
 app.post('/urls/:shortURL/update',(req, res) => {
-  const templateVars = {
-    shortURL: req.params.shortURL,
-    longURL : req.body.longURL,
-    user: req.cookies['user'],  
-  };
-  res.render('urls_show', templateVars);
+  const user = req.cookies['user'];
+  const shortURL = req.params.shortURL;
+  if(user['id'] === urlDatabase[shortURL]['userID']){
+    const templateVars = {shortURL, user, longURL : req.body.longURL,};
+    res.render('urls_show', templateVars);
+  } else {
+    res.status(400).send('Login first');
+  }
 });
 
 app.get('/hello', (req, res) => {
