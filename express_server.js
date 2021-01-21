@@ -17,7 +17,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 const generateRandomString = () => {
   return Math.random().toString(36).slice(2,8);
 };
-//to render root page
+//to render home page
 app.get('/', (req, res) => {
   res.send('Hello!');
 });
@@ -42,19 +42,19 @@ app.get('/urls.json',(req,res) => {
 //to get all the short and long urls
 app.get('/urls', (req, res) => {
   const templateVars = { 
-                         username: req.cookies["username"], 
-                         urls: urlDatabase, 
-                        };
+username: req.cookies["username"], 
+ urls: urlDatabase, 
+ };
   res.render('urls_index', templateVars);
 });
 
 //to get a single short and long urls
 app.get('/urls/:shortURL', (req, res) => {
   const templateVars = {
-                         username: req.cookies["username"], 
-                         shortURL: req.params.shortURL, 
-                         longURL: urlDatabase[req.params.shortURL],
-                        };
+  username: req.cookies["username"], 
+  shortURL: req.params.shortURL, 
+  longURL: urlDatabase[req.params.shortURL],
+ };
   res.render('urls_show',templateVars);
 })
 //Renders form to enter long url
@@ -90,6 +90,12 @@ app.post('/urls/:shortURL/update',(req, res) => {
   };
   res.render('urls_show', templateVars);
 })
+
+//method to return registeration template
+app.get("/register", (req,res) => {
+  let templateVars = { username: req.cookies["username"] };
+  res.render("urls_registration", templateVars);
+});
 
 app.get('/hello', (req, res) => {
   res.send('<html><body>Hello <b>World</b></body></html>\n');
